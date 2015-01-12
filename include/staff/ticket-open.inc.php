@@ -6,6 +6,43 @@ if (!defined('OSTSCPINC') || !$thisstaff
 $info=array();
 $info=Format::htmlchars(($errors && $_POST)?$_POST:$info);
 
+//mailmode
+$mailmode = isset($_GET["mailmode"]) && filter_input(INPUT_GET, "mailmode") == true;
+//mod: allow prefill by $_GET variables
+foreach (array(
+    "email" => "email",
+    "name" => "name",
+    "nummer" => "number",
+    "deptId" => "deptId",
+    "response" => "response"
+) as $a=>$b)
+{
+    if (isset($_GET[$a]))
+    {
+        $info[$b] = utf8_encode(filter_input(INPUT_GET, $a));
+    }
+}
+//manche felder müssen per JS gesetzt werden, weil dynamisch
+if (isset($_GET["subject"])):
+    ?>
+<script type="text/javascript">
+    $(function(){
+        $("tr:contains('Betreff:') input").val("<?php echo utf8_encode(filter_input(INPUT_GET, "subject"));?>").change();
+    });
+</script>
+    <?php
+endif;
+if (isset($_GET["auftrag"])):
+    ?>
+<script type="text/javascript">
+    $(function(){
+        $("tr:contains('Auftragsnummer:') input").val("<?php echo filter_input(INPUT_GET, "auftrag");?>").change();
+    });
+</script>
+    <?php
+endif;
+
+
 if (!$info['topicId'])
     $info['topicId'] = $cfg->getDefaultTopicId();
 
@@ -31,7 +68,7 @@ if ($_POST)
  <input type="hidden" name="a" value="open">
 <div style="margin-bottom:20px; padding-top:5px;">
     <div class="pull-left flush-left">
-        <h2><?php echo __('Open a New Ticket');?></h2>
+        <h2><?php echo __($mailmode ? "Neue E-Mail schreiben" : 'Open a New Ticket');?></h2>
     </div>
 </div>
  <table class="form_table fixed" width="940" border="0" cellspacing="0" cellpadding="2">
@@ -106,7 +143,11 @@ if ($_POST)
         } ?>
 
         <?php
-        if($cfg->notifyONNewStaffTicket()) {  ?>
+        if ($mailmode)
+        {
+            ?><input type="hidden" name="alertuser" value="true"/><?php
+        }
+        else if($cfg->notifyONNewStaffTicket()) {  ?>
         <tr>
             <td width="160"><?php echo __('Ticket Notice'); ?>:</td>
             <td>
@@ -118,12 +159,12 @@ if ($_POST)
         } ?>
     </tbody>
     <tbody>
-        <tr>
+        <tr <?php if($mailmode):?>style="display: none;"<?php endif;?>>
             <th colspan="2">
                 <em><strong><?php echo __('Ticket Information and Options');?></strong>:</em>
             </th>
         </tr>
-        <tr>
+        <tr <?php if($mailmode):?>style="display: none;"<?php endif;?>>
             <td width="160" class="required">
                 <?php echo __('Ticket Source');?>:
             </td>
@@ -141,7 +182,7 @@ if ($_POST)
                 &nbsp;<font class="error"><b>*</b>&nbsp;<?php echo $errors['source']; ?></font>
             </td>
         </tr>
-        <tr>
+        <tr <?php if($mailmode):?>style="display: none;"<?php endif;?>>
             <td width="160" class="required">
                 <?php echo __('Help Topic'); ?>:
             </td>
@@ -182,7 +223,7 @@ if ($_POST)
         </tr>
         <tr>
             <td width="160">
-                <?php echo __('Department'); ?>:
+                <?php echo __('Abteilung/Absender'); ?>:
             </td>
             <td>
                 <select name="deptId">
@@ -206,7 +247,7 @@ if ($_POST)
             </td>
         </tr>
 
-         <tr>
+         <tr <?php if($mailmode):?>style="display: none;"<?php endif;?>>
             <td width="160">
                 <?php echo __('SLA Plan');?>:
             </td>
@@ -226,7 +267,7 @@ if ($_POST)
             </td>
          </tr>
 
-         <tr>
+         <tr <?php if($mailmode):?>style="display: none;"<?php endif;?>>
             <td width="160">
                 <?php echo __('Due Date');?>:
             </td>
@@ -247,7 +288,7 @@ if ($_POST)
 
         <?php
         if($thisstaff->hasPerm(TicketModel::PERM_ASSIGN, false)) { ?>
-        <tr>
+        <tr <?php if($mailmode):?>style="display: none;"<?php endif;?>>
             <td width="160"><?php echo __('Assign To');?>:</td>
             <td>
                 <select id="assignId" name="assignId">
@@ -286,13 +327,23 @@ if ($_POST)
             }
         ?>
         </tbody>
+        <!-- mod: hide unnecessary stuff -->
+        <?php if($mailmode): ?>
+        <script type="text/javascript">
+            $(function(){$("textarea[name='message']").val("----------").parents("tr").hide();});
+        </script>
+        <?php endif; ?>
         <tbody>
         <?php
         //is the user allowed to post replies??
         if ($thisstaff->getRole()->hasPerm(TicketModel::PERM_REPLY)) { ?>
         <tr>
             <th colspan="2">
+                <?php if ($mailmode):?>
+                <em><strong><?php echo __('Nachricht');?></strong>: <?php echo __('Nachricht an den Kunden.');?></em>
+                <?php else: ?>
                 <em><strong><?php echo __('Response');?></strong>: <?php echo __('Optional response to the above issue.');?></em>
+                <?php endif; ?>
             </th>
         </tr>
         <tr>
@@ -323,11 +374,11 @@ if ($_POST)
                         ?> draft draft-delete" data-signature="<?php
                         echo Format::htmlchars(Format::viewableImages($signature)); ?>"
                     data-signature-field="signature" data-dept-field="deptId"
-                    placeholder="<?php echo __('Initial response for the ticket'); ?>"
+                    placeholder="<?php echo __('Nachricht an den Kunden'); ?>"
                     name="response" id="response" cols="21" rows="8"
                     style="width:80%;" <?php
     list($draft, $attrs) = Draft::getDraftAndDataAttrs('ticket.staff.response', false, $info['response']);
-    echo $attrs; ?>><?php echo $_POST ? $info['response'] : $draft;
+    echo $attrs; ?>><?php echo $_POST || isset($_GET["response"]) ? $info['response'] : $draft;
                 ?></textarea>
                     <div class="attachments">
 <?php
@@ -382,13 +433,13 @@ print $response_form->getField('attachments')->render();
         <?php
         } //end canPostReply
         ?>
-        <tr>
+        <tr <?php if ($mailmode):?>style="display: none;"<?php endif; ?>>
             <th colspan="2">
                 <em><strong><?php echo __('Internal Note');?></strong>
                 <font class="error">&nbsp;<?php echo $errors['note']; ?></font></em>
             </th>
         </tr>
-        <tr>
+        <tr <?php if ($mailmode):?>style="display: none;"<?php endif; ?>>
             <td colspan=2>
                 <textarea
                     class="<?php if ($cfg->isRichTextEnabled()) echo 'richtext';
@@ -403,7 +454,7 @@ print $response_form->getField('attachments')->render();
     </tbody>
 </table>
 <p style="text-align:center;">
-    <input type="submit" name="submit" value="<?php echo _P('action-button', 'Open');?>">
+    <input type="submit" name="submit" value="<?php echo _P('action-button', $mailmode ? "E-Mail senden" : 'Open');?>">
     <input type="reset"  name="reset"  value="<?php echo __('Reset');?>">
     <input type="button" name="cancel" value="<?php echo __('Cancel');?>" onclick="javascript:
         $('.richtext').each(function() {
@@ -438,7 +489,7 @@ $(function() {
    <?php
     // Popup user lookup on the initial page load (not post) if we don't have a
     // user selected
-    if (!$_POST && !$user) {?>
+    if (!$mailmode && !$_POST && !$user) {?>
     setTimeout(function() {
       $.userLookup('ajax.php/users/lookup/form', function (user) {
         window.location.href = window.location.href+'&uid='+user.id;

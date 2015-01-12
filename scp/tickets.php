@@ -27,9 +27,15 @@ $page='';
 $ticket = $user = null; //clean start.
 $redirect = false;
 //LOCKDOWN...See if the id provided is actually valid and if the user has access.
-if($_REQUEST['id']) {
-    if(!($ticket=Ticket::lookup($_REQUEST['id'])))
+if($_REQUEST['id'] || $_REQUEST['tid']) {
+    if($_REQUEST['id'] && !($ticket=Ticket::lookup($_REQUEST['id'])))
+    {
          $errors['err']=sprintf(__('%s: Unknown or invalid ID.'), __('ticket'));
+    }
+    else if ($_REQUEST['tid'] && !($ticket=Ticket::lookupByNumber($_REQUEST['tid'], null)))
+    {
+       $errors['err']='Unknown or invalid ticket ID';
+    }
     elseif(!$ticket->checkStaffPerm($thisstaff)) {
         $errors['err']=__('Access denied. Contact admin if you believe this is in error');
         $ticket=null; //Clear ticket obj.
@@ -228,7 +234,7 @@ if($_POST && !$errors):
                     break;
                 case 'overdue':
                     $dept = $ticket->getDept();
-                    if(!$dept || !$dept->isManager($thisstaff)) {
+                    if(false && (!$dept || !$dept->isManager($thisstaff))) {
                         $errors['err']=__('Permission Denied. You are not allowed to flag tickets overdue');
                     } elseif($ticket->markOverdue()) {
                         $msg=sprintf(__('Ticket flagged as overdue by %s'),$thisstaff->getName());
@@ -239,7 +245,7 @@ if($_POST && !$errors):
                     break;
                 case 'answered':
                     $dept = $ticket->getDept();
-                    if(!$dept || !$dept->isManager($thisstaff)) {
+                    if(false && (!$dept || !$dept->isManager($thisstaff))) {
                         $errors['err']=__('Permission Denied. You are not allowed to flag tickets');
                     } elseif($ticket->markAnswered()) {
                         $msg=sprintf(__('Ticket flagged as answered by %s'),$thisstaff->getName());
@@ -250,7 +256,7 @@ if($_POST && !$errors):
                     break;
                 case 'unanswered':
                     $dept = $ticket->getDept();
-                    if(!$dept || !$dept->isManager($thisstaff)) {
+                    if(false && (!$dept || !$dept->isManager($thisstaff))) {
                         $errors['err']=__('Permission Denied. You are not allowed to flag tickets');
                     } elseif($ticket->markUnAnswered()) {
                         $msg=sprintf(__('Ticket flagged as unanswered by %s'),$thisstaff->getName());
@@ -428,7 +434,13 @@ if ($thisstaff->hasPerm(TicketModel::PERM_CREATE, false)) {
                            'href'=>'tickets.php?a=open',
                            'iconclass'=>'newTicket',
                            'id' => 'new-ticket'),
-                        ($_REQUEST['a']=='open'));
+                        ($_REQUEST['a']=='open'&&!$_REQUEST['mailmode']));
+    $nav->addSubMenu(array('desc'=>__('Neue E-Mail'),
+                           'title'=> __('E-Mail von uns direkt an den Kunden'),
+                           'href'=>'tickets.php?a=open&mailmode=true',
+                           'iconclass'=>'newTicket',
+                           'id' => 'new-email'),
+                        ($_REQUEST['a']=='open')&&$_REQUEST['mailmode']==="true");
 }
 
 
