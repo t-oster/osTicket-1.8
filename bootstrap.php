@@ -1,5 +1,5 @@
 <?php
-
+require_once __DIR__."/OnebathAddons.php";
 class Bootstrap {
 
     static function init() {

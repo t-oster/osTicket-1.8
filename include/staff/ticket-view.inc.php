@@ -959,5 +959,14 @@ $(function() {
         return false;
     });
 
+    
+    //eBay Referenznummern, falls vorhanden
+    var eBay = $(".thread-entry.message:last strong:contains('E-Mail-Referenznummer')").add(".thread-entry.message:last span:contains('E-Mail-Referenznummer')").add(".thread-entry.message:last div:contains('E-Mail-Referenznummer')").text().match(/E-Mail-Referenznummer: [^\]]*\]_\[[^\]]*\]/);
+    if (eBay)
+    {
+        $("#reply input[type='submit']").click(function(){
+            $("#response").val($("#response").val()+"<br/><br/>"+eBay).change();
+        });
+    }
 });
 </script>

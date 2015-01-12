@@ -74,7 +74,7 @@ if ($user && $cfg->isAvatarsEnabled())
         </span>
     </div>
     <div class="thread-body no-pjax">
-        <div><?php echo $entry->getBody()->toHtml(); ?></div>
+        <div><?php echo OneBathAddons::replaceAutomatLinks($entry->getBody()->toHtml()); ?></div>
         <div class="clear"></div>
 <?php
     // The strangeness here is because .has_attachments is an annotation from
