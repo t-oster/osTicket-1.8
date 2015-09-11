@@ -194,7 +194,7 @@ if (!$ticket) { ?>
                     if($task->isOpen()){ ?>
                     <tr>
                         <th><?php echo __('Due Date');?>:</th>
-                        <td><?php echo $task->duedate ?
+                        <td><?php echo $task->duedate && $task->duedate != "0000-00-00 00:00:00" ?
                         Format::datetime($task->duedate) : '<span
                         class="faded">&mdash; '.__('None').' &mdash;</span>'; ?></td>
                     </tr>
