@@ -16,7 +16,7 @@ while ($res)
     $tickets []= $res;
     $res = db_fetch_array($q);
 }
-if (count($tickets) > 0)
+if (count($tickets) > 1)
 {
     error_log("Es gibt wieder nicht-repoened tickets. Guckst du http://support.one-bath.de/api/info2.php", 1, "mail@thomas-oster.de");
 }
