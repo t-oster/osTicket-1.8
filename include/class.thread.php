@@ -1260,6 +1260,35 @@ implements TemplateVariable {
                 return $ticket->getLastMessage();
             }
         }
+        
+        try
+        {
+            //MOD: Special Case: eBay email addresses should be appended user-based
+            //if the latest message is not older than a week
+            if (strpos($mailinfo["email"], "@members.ebay.de") !== false && ($user = User::lookup(array('emails__address' => $mailinfo['email']))))
+            {
+                //TODO: Get latest ticket from user. If its not older than a week
+                //return it's latest message
+                $ticket = Ticket::objects()->filter(array('user__emails__address' => $mailinfo['email']))->order_by("lastupdate", QuerySet::DESC)->first();
+                if ($ticket)
+                {
+                    if ((time() - strtotime($ticket->getEffectiveDate())) < 60*60*24*7*2)
+                    {
+                        error_log("OSTEBAYMOD success".print_r($ticket, true), 1, "mail@thomas-oster.de");
+                        return $ticket->getLastMessage();
+                    }
+                    else
+                    {
+                        error_log("OSTEBAYMOD too old ".time()." - ".strtotime($ticket->getEffectiveDate())." > 60*60*24*7*2", 1, "mail@thomas-oster.de");
+                    }
+                }
+                error_log("OSTEBAYMOD notfound".print_r($ticket, true), 1, "mail@thomas-oster.de");
+            }
+        }
+        catch (Exception $e)
+        {
+            error_log("OSTEBAYMOD failed".print_r($e, true), 1, "mail@thomas-oster.de");
+        }
 
         return null;
     }
