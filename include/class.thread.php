@@ -1272,17 +1272,14 @@ implements TemplateVariable {
                 $ticket = Ticket::objects()->filter(array('user__emails__address' => $mailinfo['email']))->order_by("lastupdate", QuerySet::DESC)->first();
                 if ($ticket)
                 {
+                    
                     if ((time() - strtotime($ticket->getEffectiveDate())) < 60*60*24*7*2)
                     {
-                        error_log("OSTEBAYMOD success".print_r($ticket, true), 1, "mail@thomas-oster.de");
                         return $ticket->getLastMessage();
                     }
-                    else
-                    {
-                        error_log("OSTEBAYMOD too old ".time()." - ".strtotime($ticket->getEffectiveDate())." > 60*60*24*7*2", 1, "mail@thomas-oster.de");
-                    }
+                    //ticket too old
                 }
-                error_log("OSTEBAYMOD notfound".print_r($ticket, true), 1, "mail@thomas-oster.de");
+                //no previous ticket of eBay user found
             }
         }
         catch (Exception $e)
