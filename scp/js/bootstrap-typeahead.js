@@ -177,8 +177,8 @@
         i.find('a').html(that.highlighter(item, orig))
         return i[0]
       })
-
-      items.first().addClass('active')
+      //suggested fix from https://bibwild.wordpress.com/2013/04/04/overriding-bootstrap-typeahead-to-not-initially-select/
+      //items.first().addClass('active')
       this.$menu.html(items)
       return this
     }
