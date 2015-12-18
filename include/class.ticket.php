@@ -1523,7 +1523,9 @@ implements RestrictedAccess, Threadable {
         // We're also checking autorespond flag because we don't want to
         // reopen closed tickets on auto-reply from end user. This is not to
         // confused with autorespond on new message setting
-        if ($autorespond && $this->isClosed() && $this->isReopenable()) {
+        // EDIT: I DO WANT THEM TO BE REOPENED, NO MATTER WHAT. But of cause no
+        // autoresponse, because of endless loops.
+        if ($this->isClosed() && $this->isReopenable()) {
             $this->reopen();
             $dept = $this->getDept();
             $autoclaim = ($cfg->autoClaimTickets() && !$dept->disableAutoClaim());
