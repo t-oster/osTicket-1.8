@@ -707,6 +707,16 @@ class TasksAjaxAPI extends AjaxController {
             if ($task->setStatus($status, $_POST['comments'], $errors))
                 Http::response(201, 0);
 
+            /** ugly but ORM looks to complex to me **/
+            if (isset($_POST["snooze"]) && isset($_POST["reopentime"]))
+            {
+                $autoreopen = filter_input(INPUT_POST, "reopentime")." ".filter_input(INPUT_POST, "reopentime:time");
+                db_query("UPDATE ".TASK_TABLE." SET autoreopen = '$autoreopen' WHERE id = ".$task->getId());
+            }
+            else
+            {
+                db_query("UPDATE ".TASK_TABLE." SET autoreopen = NULL WHERE id = ".$task->getId());
+            }
             $info['error'] = $errors['err'] ?: __('Unable to change status of the task');
         }
 
