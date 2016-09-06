@@ -967,7 +967,7 @@ $(function() {
 
     
     //eBay Referenznummern, falls vorhanden
-    var eBay = $(".thread-entry.message:last strong:contains('E-Mail-Referenznummer')").add(".thread-entry.message:last span:contains('E-Mail-Referenznummer')").add(".thread-entry.message:last div:contains('E-Mail-Referenznummer')").text().match(/E-Mail-Referenznummer: [^\]]*\]_\[[^\]]*\]/);
+    var eBay = $(".thread-entry.message strong:contains('E-Mail-Referenznummer')").add(".thread-entry.message span:contains('E-Mail-Referenznummer')").add(".thread-entry.message div:contains('E-Mail-Referenznummer')").last().text().match(/E-Mail-Referenznummer: [^\]]*\]_\[[^\]]*\]/);
     if (eBay)
     {
         $("#reply input[type='submit']").click(function(){
